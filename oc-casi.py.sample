@@ -176,10 +176,13 @@ try:
 except requests.exceptions.MissingSchema:
     print("Erreur.")
     print(f"Veuillez configurer avec une url correcte")
+    mb.askokcancel("Erreur", "URL incorrecte.")
+    sys.exit(1)
 except owncloud.owncloud.HTTPResponseError:
     print("Erreur.")
     print(" Veuillez configurer "
           "avec utilisateur et mot de passe valide")
+    mb.askokcancel("Erreur", "Login/password ou server incorrects.")
     # print(e)
     sys.exit(1)
 
