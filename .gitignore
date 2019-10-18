@@ -1,1 +1,8 @@
+__pycache__/
+build/
+dist/
 oc-casi.py
+*.cbz
+*.cbr
+*.spec
+

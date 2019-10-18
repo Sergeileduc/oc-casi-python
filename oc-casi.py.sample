@@ -195,7 +195,9 @@ except owncloud.owncloud.HTTPResponseError:
 
 # Add a trailing /
 # Documents/Tests --> Documents/Tests/
-cloud_dir = os.path.join(cloud_dir, "")
+# cloud_dir = os.path.join(cloud_dir, "")
+if cloud_dir[-1] != "/":
+    cloud_dir = cloud_dir + "/"
 print(cloud_dir)
 
 # Local file is the script argument
@@ -263,9 +265,6 @@ print(r.status_code)
 # Redim 640
 r = session.get(url_640)
 
-# Upload
-file_ = {'Filedata': ('cover', open(cover, 'rb'), 'image/jpg')}
-
 headers = {
     "Accept": "application/json",
     "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
@@ -277,7 +276,10 @@ headers = {
     "X-Requested-With": "XMLHttpRequest"
     }
 
-r = session.post(url_upload, files=file_, headers=headers)
+# Upload
+with open(cover, 'rb') as f:
+    file_ = {'Filedata': ('cover', f, 'image/jpg')}
+    r = session.post(url_upload, files=file_, headers=headers)
 
 cover_id = r.text  # casimages share page ID
 
