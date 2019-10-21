@@ -191,8 +191,8 @@ def create_callback(encoder, gui):
         percent = int(monitor.bytes_read / encoder_len * 100.0)
         # print(percent)
         gui.percent.set(percent)
-        gui.update_idletasks()
-        # gui.update()s
+        # gui.update_idletasks()
+        gui.progress.update()
 
     return callback
 
@@ -428,7 +428,7 @@ print(f"[url={share}][img]{cover_url}[/img][/url]")
 
 # GUI output
 master = tk.Tk()
-ppos_x = int(master.winfo_screenwidth() / 2 - 500)
+pos_x = int(master.winfo_screenwidth() / 2 - 500)
 pos_y = int(master.winfo_screenheight() / 2)
 master.wm_geometry(f"1000x50+{pos_x}+{pos_y}")
 w = tk.Text(master, height=1, exportselection=1)
