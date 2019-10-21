@@ -428,9 +428,9 @@ print(f"[url={share}][img]{cover_url}[/img][/url]")
 
 # GUI output
 master = tk.Tk()
-pos_x = int(master.winfo_screenwidth() / 2 - size_x / 2)
-pos_y = int(master.winfo_screenheight() / 2 - size_y / 2)
-master.wm_geometry(f"{bbcode_width}x{bbcode_height}+{pos_x}+{pos_y}")
+ppos_x = int(master.winfo_screenwidth() / 2 - 500)
+pos_y = int(master.winfo_screenheight() / 2)
+master.wm_geometry(f"1000x50+{pos_x}+{pos_y}")
 w = tk.Text(master, height=1, exportselection=1)
 w.insert(1.0, f"[url={share}][img]{cover_url}[/img][/url]")
 w.tag_add(SEL, "1.0", END)
