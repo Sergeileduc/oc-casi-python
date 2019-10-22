@@ -2,7 +2,9 @@ __pycache__/
 build/
 dist/
 oc-casi.py
+oc-casi-640.py
+oc-casi-320.py
+oc-casi-125.py
 *.cbz
 *.cbr
 *.spec
-
