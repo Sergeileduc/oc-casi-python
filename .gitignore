@@ -5,3 +5,5 @@ owncloud.ini
 *.cbz
 *.cbr
 *.spec
+*.png
+*.ico
