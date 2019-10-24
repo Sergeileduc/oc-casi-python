@@ -8,6 +8,8 @@ Return BBcode.
 import sys
 import os
 import time
+from configparser import NoOptionError, NoSectionError
+from configparser import ConfigParser
 # from tkinter import *
 import tkinter as tk
 from tkinter import ttk
@@ -25,16 +27,9 @@ from owncloud import HTTPResponseError
 from six.moves.urllib import parse
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
-user = "username"
-password = "password"
-server = "http://server"
 API_PATH = "ocs/v1.php/apps/files_sharing/api/v1"
 
-# webdav url
-if not server.endswith('/'):
-    webdav_url = server + '/remote.php/dav/files/' + parse.quote(user)
-else:
-    webdav_url = server + 'remote.php/dav/files/' + parse.quote(user)
+CONF = "owncloud.ini"
 
 # Path selection window
 # Modify at your will
@@ -55,7 +50,7 @@ paths_file = os.path.join(Path.home(), ".owncloud_paths.txt")
 # Check command line arguments
 if len(sys.argv) < 2:
     print("Missing command line argument (cbz file)")
-    sys.exit()
+    sys.exit(1)
 
 
 # Create file if not exists
@@ -145,6 +140,7 @@ def select():
 
 
 root = tk.Tk()
+root.title("Chemins Owncloud")
 
 pos_x = int(root.winfo_screenwidth() / 2 - path_box_width / 2)
 pos_y = int(root.winfo_screenheight() / 2 - path_box_height / 2)
@@ -288,6 +284,29 @@ class Uploadbar(tk.Tk):
         raise HTTPResponseError(res)
 
 
+# Read .ini file
+config = ConfigParser()
+config.read(CONF)  # read owncloud.ini
+
+# Should work with .get() methods in Python 3.8
+# server = config.get('owncloud', 'host')
+# user = config.get('owncloud', 'username ')
+# password = config.get('owncloud', 'password ')
+
+try:
+    server = config['owncloud']['host']
+    user = config['owncloud']['username']
+    password = config['owncloud']['password']
+except (NoOptionError, NoOptionError) as e:
+    print(e)
+    sys.exit(1)
+
+# webdav url
+if not server.endswith('/'):
+    webdav_url = server + '/remote.php/dav/files/' + parse.quote(user)
+else:
+    webdav_url = server + 'remote.php/dav/files/' + parse.quote(user)
+
 # Login
 try:
     oc = owncloud.Client(server)
@@ -298,12 +317,12 @@ except requests.exceptions.MissingSchema:
     print(f"Veuillez configurer avec une url correcte")
     mb.askokcancel("Erreur", "URL incorrecte.")
     sys.exit(1)
-except owncloud.owncloud.HTTPResponseError:
+except owncloud.owncloud.HTTPResponseError as e:
     print("Erreur.")
     print(" Veuillez configurer "
           "avec utilisateur et mot de passe valide")
     mb.askokcancel("Erreur", "Login/password ou server incorrects.")
-    # print(e)
+    print(e)
     sys.exit(1)
 
 # Check if cloud dir exists :
@@ -330,6 +349,9 @@ local_file = sys.argv[1]
 if os.path.isfile(local_file):
     basename = os.path.basename(local_file)
     print(basename)
+else:
+    print("Not a file ! Exit")
+    sys.exit(1)
 
 try:
     # oc.put_file(cloud_dir, local_file)
@@ -350,9 +372,20 @@ print(share)
 if zipfile.is_zipfile(local_file):
     print("ZIIIIP")
 else:
+    # Display OC share, and exit
     print("NOOO ZIIIIP")
-    # TODO
-    # Print share link, without cover
+    master = tk.Tk()
+    pos_x = int(master.winfo_screenwidth() / 2 - 600)
+    pos_y = int(master.winfo_screenheight() / 2)
+    master.wm_geometry(f"1200x50+{pos_x}+{pos_y}")
+    w = tk.Text(master, height=1, exportselection=1)
+    w.insert(1.0, f"[url={share}]basename[/url]")
+    w.tag_add(SEL, "1.0", END)
+    w.mark_set(INSERT, "1.0")
+    w.see(INSERT)
+    w.pack(fill=tk.BOTH, expand=1)
+    master.mainloop()
+    sys.exit()
 
 
 # EXTRACT COVER
@@ -376,7 +409,7 @@ print(cover)
 
 # CASIMAGES
 url = "https://www.casimages.com/"
-url_640 = "https://www.casimages.com/ajax/s_ano_resize.php?dim=125"
+url_redim = "https://www.casimages.com/ajax/s_ano_resize.php?dim=320"
 url_upload = "https://www.casimages.com/upload_ano_multi.php"
 url_casi_share = "https://www.casimages.com/codes_ano_multi.php?img={}"
 
@@ -387,8 +420,8 @@ session = requests.Session()
 r = session.get(url)
 print(r.status_code)
 
-# Redim 640
-r = session.get(url_640)
+# Redim
+r = session.get(url_redim)
 
 headers = {
     "Accept": "application/json",
@@ -428,9 +461,9 @@ print(f"[url={share}][img]{cover_url}[/img][/url]")
 
 # GUI output
 master = tk.Tk()
-pos_x = int(master.winfo_screenwidth() / 2 - 500)
+pos_x = int(master.winfo_screenwidth() / 2 - 600)
 pos_y = int(master.winfo_screenheight() / 2)
-master.wm_geometry(f"1000x50+{pos_x}+{pos_y}")
+master.wm_geometry(f"1200x50+{pos_x}+{pos_y}")
 w = tk.Text(master, height=1, exportselection=1)
 w.insert(1.0, f"[url={share}][img]{cover_url}[/img][/url]")
 w.tag_add(SEL, "1.0", END)
