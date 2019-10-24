@@ -1,8 +1,8 @@
 # oc-casi-python
 
-Rename it (remove .sample).
+Rename owncloud.ini (remove .sample).
 
-Add your credentials in the file.
+Add your credentials in the owncloud.ini
 
 Install libs (like pyocclient, bs4, etc...) with pip (pip install).
 
