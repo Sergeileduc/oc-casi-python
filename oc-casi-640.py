@@ -297,7 +297,7 @@ try:
     server = config['owncloud']['host']
     user = config['owncloud']['username']
     password = config['owncloud']['password']
-except (NoOptionError, NoOptionError) as e:
+except (NoOptionError, NoSectionError) as e:
     print(e)
     sys.exit(1)
 
