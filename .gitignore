@@ -4,6 +4,7 @@ dist/
 .vscode/.ropeproject/
 owncloud.ini
 *.cbz
+*.zip
 *.cbr
 *.spec
 *.png
