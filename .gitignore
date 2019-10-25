@@ -8,3 +8,4 @@ owncloud.ini
 *.spec
 *.png
 *.ico
+oc-casi.py
