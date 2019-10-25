@@ -65,7 +65,7 @@ with open(paths_file, 'r') as f:
 cloud_dir = ""
 
 
-def edit_path(index):
+def _edit_path(index):  # noqa: E501
     # This is whatever function that creates stuff
     def edit():
         paths_list[index] = e1.get()
@@ -86,7 +86,7 @@ def edit_path(index):
     return top
 
 
-def add_path():
+def _add_path():  # noqa: E501
     # This is whatever function that creates stuff
     def edit():
         paths_list.append(e1.get())
@@ -106,19 +106,19 @@ def add_path():
     return top
 
 
-def edit():
+def _edit():
     global lb, paths_list, root
     # Get dictionary from listbox
     sel = lb.curselection()
     if len(sel) > 0:
         indexToEdit = paths_list.index(lb.get(sel[0]))
         lb.delete(sel)
-        root.wait_window(edit_path(indexToEdit))
+        root.wait_window(_edit_path(indexToEdit))
         # print(paths_list[indexToEdit])
         lb.insert(sel, paths_list[indexToEdit])
 
 
-def remove():
+def _remove():
     sel = lb.curselection()
     if len(sel) > 0:
         index = paths_list.index(lb.get(sel[0]))
@@ -126,13 +126,13 @@ def remove():
         paths_list.pop(index)
 
 
-def add():
+def _add():
     global lb, root
-    root.wait_window(add_path())
+    root.wait_window(_add_path())
     lb.insert(END, paths_list[-1])
 
 
-def select():
+def _select():
     global root, cloud_dir
     # sel = lb.curselection()
     cloud_dir = lb.get(lb.curselection())
@@ -141,9 +141,10 @@ def select():
 
 root = tk.Tk()
 root.title("Chemins Owncloud")
+root.lift()
 
-pos_x = int(root.winfo_screenwidth() / 2 - path_box_width / 2)
-pos_y = int(root.winfo_screenheight() / 2 - path_box_height / 2)
+pos_x = int(root.winfo_screenwidth()/2 - path_box_width/2)
+pos_y = int(root.winfo_screenheight()/2 - path_box_height/2)
 root.wm_geometry(f"{path_box_width}x{path_box_height}+{pos_x}+{pos_y}")
 lb = tk.Listbox(root)
 lb.pack(fill="both")
@@ -152,10 +153,10 @@ lb.pack_propagate(True)
 
 bottom_bar = tk.Frame(root)
 bottom_bar.pack(side='bottom')
-tk.Button(bottom_bar, text="Remove", command=remove).pack(side=LEFT)
-tk.Button(bottom_bar, text="Add", command=add).pack(side=LEFT)
-tk.Button(bottom_bar, text="Edit", command=edit).pack(side=LEFT)
-tk.Button(bottom_bar, text="Select", command=select).pack(side=LEFT)
+tk.Button(bottom_bar, text="Remove", command=_remove).pack(side=LEFT)
+tk.Button(bottom_bar, text="Add", command=_add).pack(side=LEFT)
+tk.Button(bottom_bar, text="Edit", command=_edit).pack(side=LEFT)
+tk.Button(bottom_bar, text="Select", command=_select).pack(side=LEFT)
 root.mainloop()
 
 for i in paths_list:
@@ -178,7 +179,7 @@ else:
 
 # OWNCLOUD
 def create_callback(encoder, gui):
-    """ Create callback for upload method."""
+    """Create callback for upload method."""
     encoder_len = encoder.len
     print(encoder_len)
 
@@ -286,7 +287,16 @@ class Uploadbar(tk.Tk):
 
 # Read .ini file
 config = ConfigParser()
-config.read(CONF)  # read owncloud.ini
+
+if sys.platform.startswith("win32"):
+    config.read(CONF)  # read owncloud.ini
+elif sys.platform.startswith("linux"):
+    from pathlib import Path
+    home = str(Path.home())
+    CONF = os.path.join(home, '.config/', 'owncloud.ini')
+    config.read(CONF)  # read owncloud.ini
+else:
+    config.read(CONF)  # read owncloud.ini
 
 # Should work with .get() methods in Python 3.8
 # server = config.get('owncloud', 'host')

@@ -38,7 +38,7 @@ cloud_dir = "Edit"
 
 # OWNCLOUD
 def create_callback(encoder, gui):
-    """ Create callback for upload method."""
+    """Create callback for upload method."""
     encoder_len = encoder.len
     print(encoder_len)
 
@@ -146,7 +146,16 @@ class Uploadbar(tk.Tk):
 
 # Read .ini file
 config = ConfigParser()
-config.read(CONF)  # read owncloud.ini
+
+if sys.platform.startswith("win32"):
+    config.read(CONF)  # read owncloud.ini
+elif sys.platform.startswith("linux"):
+    from pathlib import Path
+    home = str(Path.home())
+    CONF = os.path.join(home, '.config/', 'owncloud.ini')
+    config.read(CONF)  # read owncloud.ini
+else:
+    config.read(CONF)  # read owncloud.ini
 
 # Should work with .get() methods in Python 3.8
 # server = config.get('owncloud', 'host')

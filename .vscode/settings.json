@@ -1,6 +1,6 @@
 {
     "editor.rulers": [ 80 ],
-    "python.pythonPath": "C:\\Users\\serge\\AppData\\Local\\Programs\\Python\\Python37\\python.exe",
+    "python.pythonPath": "/usr/bin/python3",
     "python.linting.enabled": true,
     "python.testing.promptToConfigure": false,
     "python.testing.pytestEnabled": false,
