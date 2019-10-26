@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 # -*-coding:utf-8 -*-
 """Upload file to Onwcloud, extract cover, and upload to casimages.
-Return BBcode."""
+
+Return BBcode.
+"""
 
 import sys
 import os
@@ -22,6 +24,8 @@ user = "username"
 password = "password"
 server = "http://server"
 API_PATH = "ocs/v1.php/apps/files_sharing/api/v1"
+
+redim_val = 640
 
 # Path selection window
 # Modify at your will
@@ -58,7 +62,7 @@ cloud_dir = ""
 
 
 def edit_path(index):
-    # This is whatever function that creates stuff
+    """Create tkinter 'edit path' window."""
     def edit():
         paths_list[index] = e1.get()
         # print(paths_list)
@@ -79,7 +83,7 @@ def edit_path(index):
 
 
 def add_path():
-    # This is whatever function that creates stuff
+    """Create tkinter 'add path' window."""
     def edit():
         paths_list.append(e1.get())
         # print(paths_list)
@@ -98,7 +102,7 @@ def add_path():
     return top
 
 
-def edit():
+def _edit():
     global lb, paths_list, root
     # Get dictionary from listbox
     sel = lb.curselection()
@@ -110,7 +114,7 @@ def edit():
         lb.insert(sel, paths_list[indexToEdit])
 
 
-def remove():
+def _remove():
     sel = lb.curselection()
     if len(sel) > 0:
         index = paths_list.index(lb.get(sel[0]))
@@ -118,13 +122,13 @@ def remove():
         paths_list.pop(index)
 
 
-def add():
+def _add():
     global lb, root
     root.wait_window(add_path())
     lb.insert(END, paths_list[-1])
 
 
-def select():
+def _select():
     global root, cloud_dir
     # sel = lb.curselection()
     cloud_dir = lb.get(lb.curselection())
@@ -143,10 +147,10 @@ lb.pack_propagate(True)
 
 bottom_bar = tk.Frame(root)
 bottom_bar.pack(side='bottom')
-tk.Button(bottom_bar, text="Remove", command=remove).pack(side=LEFT)
-tk.Button(bottom_bar, text="Add", command=add).pack(side=LEFT)
-tk.Button(bottom_bar, text="Edit", command=edit).pack(side=LEFT)
-tk.Button(bottom_bar, text="Select", command=select).pack(side=LEFT)
+tk.Button(bottom_bar, text="Remove", command=_remove).pack(side=LEFT)
+tk.Button(bottom_bar, text="Add", command=_add).pack(side=LEFT)
+tk.Button(bottom_bar, text="Edit", command=_edit).pack(side=LEFT)
+tk.Button(bottom_bar, text="Select", command=_select).pack(side=LEFT)
 root.mainloop()
 
 for i in paths_list:
@@ -254,7 +258,7 @@ print(cover)
 
 # CASIMAGES
 url = "https://www.casimages.com/"
-url_640 = "https://www.casimages.com/ajax/s_ano_resize.php?dim=640"
+url_redim = f"https://www.casimages.com/ajax/s_ano_resize.php?dim={redim_val}"
 url_upload = "https://www.casimages.com/upload_ano_multi.php"
 url_casi_share = "https://www.casimages.com/codes_ano_multi.php?img={}"
 
@@ -266,7 +270,7 @@ r = session.get(url)
 print(r.status_code)
 
 # Redim 640
-r = session.get(url_640)
+r = session.get(url_redim)
 
 headers = {
     "Accept": "application/json",

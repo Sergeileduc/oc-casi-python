@@ -5,6 +5,7 @@ dist/
 oc-casi.py
 *.cbz
 *.cbr
+*.jpg
 *.zip
 *.spec
 
