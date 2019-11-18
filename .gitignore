@@ -6,6 +6,8 @@ oc-casi.py
 oc-casi-125.py
 oc-casi-320.py
 oc-casi-640.py
+progress.py
+oc-edit.py
 *.cbz
 *.cbr
 *.jpg
