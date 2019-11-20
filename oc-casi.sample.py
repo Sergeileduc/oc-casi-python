@@ -13,6 +13,7 @@ import time
 import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox as mb
+
 from tkinter import END, SEL, INSERT
 
 import zipfile
@@ -96,6 +97,7 @@ class OcExplorer(tk.Toplevel):
         self.scrollbar.pack(side="right", fill="y")
 
         self.lb.config(yscrollcommand=self.scrollbar.set)
+
         self.lb.pack(side="left", fill="both", expand=1)
 
         # Buttons
@@ -138,6 +140,7 @@ class OcExplorer(tk.Toplevel):
     def _up(self):
         self.folder_list = []
         self.lb.delete(0, tk.END)
+
         try:
             self.folder_path = self.previous_folder_path.pop()
         except IndexError:
@@ -174,6 +177,7 @@ class PathChoice(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
 
         self.title("Choix du chemin Owncloud")
+
         self.paths_file = os.path.join(Path.home(), file_)
         self.paths_list = []
 
@@ -189,16 +193,19 @@ class PathChoice(tk.Tk):
 
         # One frame for lisbox and scrollbar
         self.frame = tk.Frame(self)
+
         self.lb = tk.Listbox(self.frame, width=60, height=12,
                              font=("Helvetica", 12))
         [self.lb.insert(END, item) for item in self.paths_list]
 
         self.frame.pack(fill="both", expand=1)
+
         self.scrollbar = tk.Scrollbar(self.frame, orient="vertical")
         self.scrollbar.config(command=self.lb.yview)
         self.scrollbar.pack(side="right", fill="y")
 
         self.lb.config(yscrollcommand=self.scrollbar.set)
+
         self.lb.pack(side="left", fill="both", expand=1)
 
         # Another Frame for buttons
@@ -234,6 +241,7 @@ class PathChoice(tk.Tk):
         # Another Frame for checkbox
         self.bottom_bar = tk.Frame(self)
         self.check_casi = tk.IntVar()
+
         self.c = tk.Checkbutton(self.bottom_bar,
                                 justify="left",
                                 text=("Et uploader la cover sur Casimages\n"
@@ -281,6 +289,7 @@ class PathChoice(tk.Tk):
 
     def _select(self):
         self._save_file()
+
         try:
             self.selected_cloud_dir = self.lb.get(self.lb.curselection())
             self.destroy()
@@ -300,6 +309,7 @@ class PathChoice(tk.Tk):
 
     def _save_file(self):
         self.paths_list.sort()
+
         if "Edit" in self.paths_list:
             self.paths_list.insert(0, self.paths_list.pop(self.paths_list.index("Edit")))  # noqa:E501
         with open(self.paths_file, 'w') as f:
