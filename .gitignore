@@ -8,9 +8,9 @@ oc-casi-320.py
 oc-casi-640.py
 progress.py
 oc-edit.py
+credentials.txt
 *.cbz
 *.cbr
 *.jpg
 *.zip
 *.spec
-
