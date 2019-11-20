@@ -13,7 +13,8 @@ import time
 import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox as mb
-from tkinter import END, LEFT, SEL, INSERT
+
+from tkinter import END, SEL, INSERT
 
 import zipfile
 from pathlib import Path
@@ -84,25 +85,35 @@ class OcExplorer(tk.Toplevel):
         self.oc = owncloud.Client(server)
         self._login()
 
+        self.title("Dossiers Ownloud")
+
         self.frame = tk.Frame(self)
         self.lb = tk.Listbox(self.frame, width=60, height=15,
                              font=("Helvetica", 12))
-        self.frame.pack()
+        self.frame.pack(fill="both", expand=1)
 
         self.scrollbar = tk.Scrollbar(self.frame, orient="vertical")
         self.scrollbar.config(command=self.lb.yview)
         self.scrollbar.pack(side="right", fill="y")
 
         self.lb.config(yscrollcommand=self.scrollbar.set)
-        self.lb.pack(side="left", fill="y")
 
+        self.lb.pack(side="left", fill="both", expand=1)
+
+        # Buttons
         self.bottom_bar = tk.Frame(self)
         self.bottom_bar.pack(side='bottom')
-        tk.Button(self.bottom_bar, text="Précédent", command=self._up).pack(side=LEFT)  # noqa:E501
-        tk.Button(self.bottom_bar, text="Ajouter le chemin", command=self._select).pack(side=LEFT)  # noqa:E501
-        # tk.Button(self.bottom_bar, text="Edit", command=self._edit).pack(side=LEFT)  # noqa:E501
-        # tk.Button(self.bottom_bar, text="Select", command=self._select).pack(side=LEFT)  # noqa:E501
-        # tk.Button(self.bottom_bar, text="Quit", command=self._quit).pack(side=LEFT)  # noqa:E501
+        self.b1 = tk.Button(self.bottom_bar, text="Précédent",
+                            command=self._up,
+                            bd=0, font=("Helvetica", 12, "bold"),
+                            width=14, height=2)  # noqa:E501
+        self.b2 = tk.Button(self.bottom_bar, text="Ajouter le chemin",
+                            command=self._select,
+                            bd=0, font=("Helvetica", 12, "bold"),
+                            width=14, height=2)
+
+        self.b1.pack(side="left", padx=30)
+        self.b2.pack(side="left", padx=30)
 
         self._populate_list()
         self.lb.bind('<Double-Button-1>', self.double_click)
@@ -129,7 +140,11 @@ class OcExplorer(tk.Toplevel):
     def _up(self):
         self.folder_list = []
         self.lb.delete(0, tk.END)
-        self.folder_path = self.previous_folder_path.pop()
+
+        try:
+            self.folder_path = self.previous_folder_path.pop()
+        except IndexError:
+            pass
         self._populate_list()
 
     def _select(self):
@@ -146,11 +161,11 @@ class OcExplorer(tk.Toplevel):
 
     def _populate_list(self):
         list_dir = self.oc.list(self.folder_path, depth=1)
-        for _, file in enumerate(list_dir, 1):
-            if file.is_dir():
-                name = file.get_name()
+        for dir_ in list_dir:
+            if dir_.is_dir():
+                name = dir_.get_name()
                 # full_path = file.get_path() + '/' + newName
-                full_path = file.get_path()
+                full_path = dir_.get_path()
                 self.folder_list.append({'path': full_path, 'name': name})
 
         [self.lb.insert(END, item["name"]) for item in self.folder_list]
@@ -160,6 +175,8 @@ class PathChoice(tk.Tk):
 
     def __init__(self, *args, file_=None, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+
+        self.title("Choix du chemin Owncloud")
 
         self.paths_file = os.path.join(Path.home(), file_)
         self.paths_list = []
@@ -176,41 +193,69 @@ class PathChoice(tk.Tk):
 
         # One frame for lisbox and scrollbar
         self.frame = tk.Frame(self)
-        self.lb = tk.Listbox(self.frame, width=60, height=15,
+
+        self.lb = tk.Listbox(self.frame, width=60, height=12,
                              font=("Helvetica", 12))
-        self.frame.pack()
         [self.lb.insert(END, item) for item in self.paths_list]
+
+        self.frame.pack(fill="both", expand=1)
 
         self.scrollbar = tk.Scrollbar(self.frame, orient="vertical")
         self.scrollbar.config(command=self.lb.yview)
         self.scrollbar.pack(side="right", fill="y")
 
         self.lb.config(yscrollcommand=self.scrollbar.set)
-        self.lb.pack(side="left", fill="y")
+
+        self.lb.pack(side="left", fill="both", expand=1)
 
         # Another Frame for buttons
         self.button_bar = tk.Frame(self)
-        self.button_bar.pack()
-        tk.Button(self.button_bar, text="Suppimer", command=self._remove).pack(side=LEFT)  # noqa:E501
-        tk.Button(self.button_bar, text="Nouveau chemin", command=self._add).pack(side=LEFT)  # noqa:E501
-        tk.Button(self.button_bar, text="Sélectionner et uploader", command=self._select).pack(side=LEFT)  # noqa:E501
-        tk.Button(self.button_bar, text="Sauver et Quitter", command=self._quit).pack(side=LEFT)  # noqa:E501
+        self.button_bar.pack(fill='x', ipady=10)
+        # tk.Button(self.button_bar, text="Sauver et Quitter", command=self._quit).pack(side=LEFT)  # noqa:E501
+        self.b1 = tk.Button(self.button_bar, text="Suppimer",
+                            bd=0, font=("Helvetica", 12, "bold"),
+                            width=14, height=2,
+                            command=self._remove,
+                            bg="#ede7f6",
+                            activebackground="#fff7ff")
+        self.b2 = tk.Button(self.button_bar, text="Nouveau chemin",
+                            bd=0, font=("Helvetica", 12, "bold"),
+                            width=14, height=2,
+                            command=self._add,
+                            bg="#ede7f6",
+                            activebackground="#fff7ff")
+        self.b3 = tk.Button(self.button_bar,
+                            text="Sélectionner et uploader",
+                            bd=0, font=("Helvetica", 12, "bold"),
+                            width=18, height=2,
+                            command=self._select,
+                            bg="#311b92",
+                            activebackground="#000063",
+                            activeforeground="#fff",
+                            fg="#fff")
+
+        self.b1.pack(side="left")
+        self.b2.pack(side="left")
+        self.b3.pack(side="right")
 
         # Another Frame for checkbox
         self.bottom_bar = tk.Frame(self)
         self.check_casi = tk.IntVar()
-        self.c = tk.Checkbutton(self.bottom_bar, text="Et uploader la cover sur Casimages\nDonne un lien de partage avec balise [img]",  # noqa:E501
+
+        self.c = tk.Checkbutton(self.bottom_bar,
+                                justify="left",
+                                text=("Et uploader la cover sur Casimages\n"
+                                      "Donne un lien de partage avec balise [img]"),  # noqa:E501
                                 variable=self.check_casi)
 
         self.choice = tk.OptionMenu(self.bottom_bar, self.redim, *self.choices)
 
-        self.bottom_bar.pack(side='bottom')
-        self.c.pack(side='left', padx=30)
-        self.choice.configure(width=20)
-        self.choice.pack(side='right')
-        # self.c = tk.Checkbutton(self.bottom_bar, text="Enable Tab",
-        #                         variable=self.check_casi,
-        #                         command=self.cb)
+        self.bottom_bar.pack(side='bottom', fill='x', ipady=10)
+        self.c.pack(side='left', padx=5)
+        # self.choice.configure(width=5)
+        self.choice.pack(side='left')
+
+        # self._center()
 
     def _init_file(self):
         # Create file if not exists
@@ -244,8 +289,12 @@ class PathChoice(tk.Tk):
 
     def _select(self):
         self._save_file()
-        self.selected_cloud_dir = self.lb.get(self.lb.curselection())
-        self.destroy()
+
+        try:
+            self.selected_cloud_dir = self.lb.get(self.lb.curselection())
+            self.destroy()
+        except tk.TclError:
+            pass
 
     def _quit(self):
         self._save_file()
@@ -260,8 +309,19 @@ class PathChoice(tk.Tk):
 
     def _save_file(self):
         self.paths_list.sort()
+
+        if "Edit" in self.paths_list:
+            self.paths_list.insert(0, self.paths_list.pop(self.paths_list.index("Edit")))  # noqa:E501
         with open(self.paths_file, 'w') as f:
             f.writelines([(i + "\n") for i in self.paths_list if i])
+
+    def _center(self):
+        self.update_idletasks()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
 
 class UploadApp(tk.Tk):
@@ -279,6 +339,8 @@ class UploadApp(tk.Tk):
         self.local_file = local_file
         self.basename = get_base_name(self.local_file)
         self.remote_path = remote_path
+
+        # self.wm_attributes('-type', 'splash')
 
         self.progress = ttk.Progressbar(self, orient="horizontal",
                                         length=400, mode="determinate")
@@ -325,6 +387,7 @@ class UploadApp(tk.Tk):
 
     # This code comes from pyocclient
     # https://github.com/owncloud/pyocclient
+    # and has been modified to implement progressbar
     def _put_file_chunked(self, **kwargs):
         """Uploads a file using chunks.
         :returns: True if the operation succeeded, False otherwise
@@ -474,20 +537,32 @@ class OutputShare(tk.Tk):
         self.bbcode = ""
         self._make_share_bbcode()
 
+        self.title("Liens de partage")
+
         # First line
-        w1 = tk.Text(self, width=140, height=1, font=("Helvetica", 11),
-                     exportselection=1)
-        w1.insert(1.0, self.share)
-        w1.pack(pady=10, fill=tk.BOTH, expand=1)
+        self.w1 = tk.Text(self, width=120, height=1, font=("Helvetica", 11),
+                          exportselection=1)
+        self.w1.insert(1.0, self.share)
+        self.w1.pack(pady=10, fill=tk.BOTH, expand=1)
 
         # Second line
-        w2 = tk.Text(self, width=140, height=1, font=("Helvetica", 11),
-                     exportselection=1)
-        w2.insert(1.0, self.bbcode)
-        w2.tag_add(SEL, "1.0", END)
-        w2.mark_set(INSERT, "1.0")
-        w2.see(INSERT)
-        w2.pack(pady=10, fill=tk.BOTH, expand=1)
+        self.w2 = tk.Text(self, width=120, height=1, font=("Helvetica", 11),
+                          exportselection=1)
+        self.w2.insert(1.0, self.bbcode1)
+        self.w2.tag_add(SEL, "1.0", END)
+        self.w2.mark_set(INSERT, "1.0")
+        self.w2.see(INSERT)
+        self.w2.pack(pady=10, fill="both", expand=1)
+
+        # Third line (optional)
+        if self.with_cover:
+            self.w3 = tk.Text(self, width=120, height=1, font=("Helvetica", 11),  # noqa:E501
+                              exportselection=1)
+            self.w3.insert(1.0, self.bbcode2)
+            self.w3.tag_add(SEL, "1.0", END)
+            self.w3.mark_set(INSERT, "1.0")
+            self.w3.see(INSERT)
+            self.w3.pack(pady=10, fill="both", expand=1)
 
         # Center output
         self.update_idletasks()
@@ -498,15 +573,15 @@ class OutputShare(tk.Tk):
         self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
     def _make_share_bbcode(self):
+        new_name = no_ext(self.name)
+        self.bbcode1 = f"[url={self.share}]{new_name}[/url]"
         if self.with_cover:
-            self.bbcode = f"[url={self.share}][img]{self.cover}[/img][/url]"
-        else:
-            new_name = no_ext(self.name)
-            self.bbcode = f"[url={self.share}]{new_name}[/url]"
+            self.bbcode2 = f"[url={self.share}][img]{self.cover}[/img][/url]"
 
 
 # MAIN PROGRAM here :
 app = PathChoice(file_=paths)
+app.protocol("WM_DELETE_WINDOW", app._quit)
 app.mainloop()
 
 print("GUI has closed")
@@ -598,7 +673,7 @@ if zipfile.is_zipfile(local_file) and cover_bool:
     print(f"[url={share}][img]{cover_url}[/img][/url]")
     print("**********************************************")
 
-    output = OutputShare(with_cover=True, share=share, cover=cover_url)
+    output = OutputShare(with_cover=True, name=basename, share=share, cover=cover_url)  # noqa:E501
     output.mainloop()
 
 else:
