@@ -224,7 +224,7 @@ class PathChoice(tk.Tk):
 
         # Another Frame for buttons
         self.button_bar = tk.Frame(self)
-        self.button_bar.pack(fill='x', ipady=10)
+        self.button_bar.pack(fill='x', padx=10, ipady=10)
         # tk.Button(self.button_bar, text="Sauver et Quitter", command=self._quit).pack(side=LEFT)  # noqa:E501
         self.b1 = tk.Button(self.button_bar, text="Suppimer",
                             bd=0, font=("Helvetica", 12, "bold"),
@@ -264,8 +264,8 @@ class PathChoice(tk.Tk):
 
         self.choice = tk.OptionMenu(self.bottom_bar, self.redim, *self.choices)
 
-        self.bottom_bar.pack(side='bottom', fill='x', ipady=10)
-        self.c.pack(side='left', padx=5)
+        self.bottom_bar.pack(side='bottom', fill='x', padx=10, ipady=10)
+        self.c.pack(side='left', padx=(0, 10))
         # self.choice.configure(width=5)
         self.choice.pack(side='left')
 
