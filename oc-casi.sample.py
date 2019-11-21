@@ -76,6 +76,8 @@ class OcExplorer(tk.Toplevel):
         tk.Toplevel.__init__(self, master)
         # self.racine = master
 
+        self.withdraw()
+
         self.folder_path = "/"
         self.previous_folder_path = []
         self.folder_name = ""
@@ -117,6 +119,9 @@ class OcExplorer(tk.Toplevel):
 
         self._populate_list()
         self.lb.bind('<Double-Button-1>', self.double_click)
+
+        self._alt_center(30)
+        self.deiconify()
 
     def double_click(self, event):
         widget = event.widget
@@ -169,12 +174,21 @@ class OcExplorer(tk.Toplevel):
                 self.folder_list.append({'path': full_path, 'name': name})
 
         [self.lb.insert(END, item["name"]) for item in self.folder_list]
+    
+    def _alt_center(self, pad):
+        self.update_idletasks()
+        width = self.winfo_reqwidth()
+        height = self.winfo_reqheight()
+        x = (self.winfo_screenwidth() // 2) - (width // 2) + pad
+        y = (self.winfo_screenheight() // 2) - (height // 2) + pad
+        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
 
 class PathChoice(tk.Tk):
 
     def __init__(self, *args, file_=None, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+        self.withdraw()
 
         self.title("Choix du chemin Owncloud")
 
@@ -255,7 +269,8 @@ class PathChoice(tk.Tk):
         # self.choice.configure(width=5)
         self.choice.pack(side='left')
 
-        # self._center()
+        self._center()
+        self.deiconify()
 
     def _init_file(self):
         # Create file if not exists
@@ -317,8 +332,8 @@ class PathChoice(tk.Tk):
 
     def _center(self):
         self.update_idletasks()
-        width = self.winfo_width()
-        height = self.winfo_height()
+        width = self.winfo_reqwidth()
+        height = self.winfo_reqheight()
         x = (self.winfo_screenwidth() // 2) - (width // 2)
         y = (self.winfo_screenheight() // 2) - (height // 2)
         self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
@@ -333,6 +348,8 @@ class UploadApp(tk.Tk):
         # self.overrideredirect(1)
         # self.wm_attributes('-type', 'splash')
 
+        self.withdraw()
+
         self.local_file = sys.argv[1]
 
         self.oc = oc
@@ -342,29 +359,28 @@ class UploadApp(tk.Tk):
 
         # self.wm_attributes('-type', 'splash')
 
+        self.title("Progression")
+
         self.progress = ttk.Progressbar(self, orient="horizontal",
                                         length=400, mode="determinate")
         self.progress.pack()
 
         self.bytes = 0
         self.maxbytes = 0
-        self.center()
+        self._center()
+        self.deiconify()
         self.upload()
 
-    def center(self):
+    def _center(self):
         self.update_idletasks()
-        width = self.winfo_width()
-        height = self.winfo_height()
+        width = self.winfo_reqwidth()
+        height = self.winfo_reqheight()
         x = (self.winfo_screenwidth() // 2) - (width // 2)
         y = (self.winfo_screenheight() // 2) - (height // 2)
         self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
     def upload(self):
         if self._put_file_chunked():
-            # self.progress.destroy()
-            # print("Progress is destroyed")
-            # self.withdraw()
-            # self.share()
             print("End of progressbar window")
             self.destroy()
 
@@ -529,6 +545,8 @@ class OutputShare(tk.Tk):
 
         tk.Tk.__init__(self, *args, **kwargs)
 
+        self.withdraw()
+
         self.with_cover = with_cover
         self.name = name
         self.share = share
@@ -564,19 +582,22 @@ class OutputShare(tk.Tk):
             self.w3.see(INSERT)
             self.w3.pack(pady=10, fill="both", expand=1)
 
-        # Center output
-        self.update_idletasks()
-        width = self.winfo_width()
-        height = self.winfo_height()
-        x = (self.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.winfo_screenheight() // 2) - (height // 2)
-        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+        self._center()
+        self.deiconify()
 
     def _make_share_bbcode(self):
         new_name = no_ext(self.name)
         self.bbcode1 = f"[url={self.share}]{new_name}[/url]"
         if self.with_cover:
             self.bbcode2 = f"[url={self.share}][img]{self.cover}[/img][/url]"
+
+    def _center(self):
+        self.update_idletasks()
+        width = self.winfo_reqwidth()
+        height = self.winfo_reqheight()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
 
 # MAIN PROGRAM here :
