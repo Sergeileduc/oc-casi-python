@@ -174,7 +174,7 @@ class OcExplorer(tk.Toplevel):
                 self.folder_list.append({'path': full_path, 'name': name})
 
         [self.lb.insert(END, item["name"]) for item in self.folder_list]
-    
+
     def _alt_center(self, pad):
         self.update_idletasks()
         width = self.winfo_reqwidth()
