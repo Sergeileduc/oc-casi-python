@@ -9,6 +9,9 @@ import math
 import os
 import sys
 import time
+# import json
+# import logging
+# import logging.config
 
 import tkinter as tk
 from tkinter import ttk
@@ -34,6 +37,7 @@ redim_val = 640
 
 cloud_dir = ""
 cover_bool = False
+variant_bool = False
 paths = ".owncloud_paths.txt"
 
 # Check command line arguments
@@ -50,19 +54,39 @@ def get_base_name(local_file):
         return basename
 
 
+# def setup_logging(
+#     default_path='logging_conf.json',
+#     default_level=logging.INFO,
+#     env_key='LOG_CFG'
+# ):
+#     """Setup logging configuration
+
+#     """
+#     path = default_path
+#     value = os.getenv(env_key, None)
+#     if value:
+#         path = value
+#     if os.path.exists(path):
+#         with open(path, 'rt') as f:
+#             config = json.load(f)
+#         logging.config.dictConfig(config)
+#     else:
+#         logging.basicConfig(level=default_level)
+
+
 def no_ext(basename):
     return os.path.splitext(basename)[0]
 
 
 # EXTRACT COVER
-def extract_cover(arc_name):
+def extract_cover(arc_name, index=0):
     """Extract 1st jpg found in archive (zip or cbz)."""
     with zipfile.ZipFile(arc_name, 'r') as zf:
         img_list = zf.namelist()
         jpg_list = [i for i in img_list if (
             i.endswith(".jpg") or i.endswith(".jpeg"))]
         jpg_list.sort()
-        cover = jpg_list[0]
+        cover = jpg_list[index]  # extracts 1st jpeg for cover (1 for variant)
         file_data = zf.read(cover)
     with open(os.path.basename(cover), "wb") as fout:
         fout.write(file_data)
@@ -254,18 +278,29 @@ class PathChoice(tk.Tk):
 
         # Another Frame for checkbox
         self.bottom_bar = tk.Frame(self)
+        self.bottom_left = tk.Frame(self)
+        self.bottom_right = tk.Frame(self)
         self.check_casi = tk.IntVar()
+        self.check_variant = tk.IntVar()
 
-        self.c = tk.Checkbutton(self.bottom_bar,
+        self.c = tk.Checkbutton(self.bottom_left,
                                 justify="left",
                                 text=("Et uploader la cover sur Casimages\n"
                                       "Donne un lien de partage avec balise [img]"),  # noqa:E501
                                 variable=self.check_casi)
 
-        self.choice = tk.OptionMenu(self.bottom_bar, self.redim, *self.choices)
+        self.c2 = tk.Checkbutton(self.bottom_left,
+                                 justify="left",
+                                 text=("avec variante"),
+                                 variable=self.check_variant)
+
+        self.choice = tk.OptionMenu(self.bottom_right, self.redim, *self.choices)  # noqa:E501
 
         self.bottom_bar.pack(side='bottom', fill='x', padx=10, ipady=10)
+        self.bottom_left.pack(side='left')
+        self.bottom_right.pack(side='left')
         self.c.pack(side='left', padx=(0, 10))
+        self.c2.pack(side='left', padx=(0, 10))
         # self.choice.configure(width=5)
         self.choice.pack(side='left')
 
@@ -480,18 +515,19 @@ class Casimages():
     url_casi_share = "https://www.casimages.com/codes_ano_multi.php?img={}"
 
     headers = {
-    "Accept": "application/json",
-    "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
-    "Accept-Encoding": "gzip, deflate, br",
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Gecko/20100101 Firefox/69.0",  # noqa: E501
-    "Cache-Control": "no-cache",
-    "Connection": "keep-alive",
-    "Pragma": "no-cache",
-    "X-Requested-With": "XMLHttpRequest"
-    }
+        "Accept": "application/json",
+        "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate, br",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:69.0) Gecko/20100101 Firefox/69.0",  # noqa: E501
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "Pragma": "no-cache",
+        "X-Requested-With": "XMLHttpRequest"
+              }
 
-    def __init__(self, cover, size=640):
+    def __init__(self, cover, variant=None, size=640):
         self.cover = cover
+        self.variant = variant
         self.size = size
         self.redim = size if size in ["640", "320", "125"] else "640"
         print(f"inside value of redim : {self.redim}")
@@ -540,7 +576,12 @@ class Casimages():
 class OutputShare(tk.Tk):
 
     def __init__(self, *args,
-                 with_cover=False, name=None, share=None, cover=None,
+                 with_cover=False,
+                 with_variant=False,
+                 name=None,
+                 share=None,
+                 cover=None,
+                 variant=None,
                  **kwargs):
 
         tk.Tk.__init__(self, *args, **kwargs)
@@ -548,9 +589,11 @@ class OutputShare(tk.Tk):
         self.withdraw()
 
         self.with_cover = with_cover
+        self.with_variant = with_variant
         self.name = name
         self.share = share
         self.cover = cover
+        self.variant = variant
 
         self.bbcode = ""
         self._make_share_bbcode()
@@ -582,6 +625,15 @@ class OutputShare(tk.Tk):
             self.w3.see(INSERT)
             self.w3.pack(pady=10, fill="both", expand=1)
 
+        if self.with_cover and self.with_variant:
+            self.w4 = tk.Text(self, width=120, height=2, font=("Helvetica", 11),  # noqa:E501
+                              exportselection=1)
+            self.w4.insert(1.0, self.bbcode3)
+            self.w4.tag_add(SEL, "1.0", END)
+            self.w4.mark_set(INSERT, "1.0")
+            self.w4.see(INSERT)
+            self.w4.pack(pady=10, fill="both", expand=1)
+
         self._center()
         self.deiconify()
 
@@ -589,7 +641,9 @@ class OutputShare(tk.Tk):
         new_name = no_ext(self.name)
         self.bbcode1 = f"[url={self.share}]{new_name}[/url]"
         if self.with_cover:
-            self.bbcode2 = f"[url={self.share}][img]{self.cover}[/img][/url]"
+            self.bbcode2 = f"[url={self.share}][img]{self.cover}[/img][/url]"  # noqa:E501
+            if self.with_variant:
+                self.bbcode3 = f"[url={self.share}][img]{self.cover}[/img] [img]{self.variant}[/img][/url]"  # noqa:E501
 
     def _center(self):
         self.update_idletasks()
@@ -600,6 +654,10 @@ class OutputShare(tk.Tk):
         self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
 
+# setup_logging()
+# logger = logging.getLogger(__name__)
+# logger.info('Startlogging:')
+
 # MAIN PROGRAM here :
 app = PathChoice(file_=paths)
 app.protocol("WM_DELETE_WINDOW", app._quit)
@@ -608,7 +666,9 @@ app.mainloop()
 print("GUI has closed")
 cloud_dir = app.selected_cloud_dir
 cover_bool = bool(app.check_casi.get())
-print(f"Choice for cover upload is : {cover_bool}")
+variant_bool = bool(app.check_variant.get())
+print(f"Choice for cover upload is   : {cover_bool}")
+print(f"Choice for variant upload is : {variant_bool}")
 
 redim_val = app.redim.get()
 print(f"Redim val is : {redim_val}")
@@ -691,10 +751,24 @@ if zipfile.is_zipfile(local_file) and cover_bool:
     print("**********************************************")
     print(share)
     print(cover_url)
-    print(f"[url={share}][img]{cover_url}[/img][/url]")
+
+    if variant_bool:
+        variant = extract_cover(local_file, index=1)
+        print(variant)
+        casi_upload = Casimages(variant, size=redim_val)
+        casi_upload.upload_cover()
+        variant_url = casi_upload.get_share_url()
+        print(variant_url)
+        print(f"[url={share}][img]{cover_url}[/img] [img]{variant_url}[/img][/url]")  # noqa:E501
+    else:
+        variant_url = None
+        print(f"[url={share}][img]{cover_url}[/img][/url]")
+
     print("**********************************************")
 
-    output = OutputShare(with_cover=True, name=basename, share=share, cover=cover_url)  # noqa:E501
+    output = OutputShare(with_cover=True, with_variant=variant_bool,
+                         name=basename, share=share, cover=cover_url,
+                         variant=variant_url)
     output.mainloop()
 
 else:
@@ -703,5 +777,6 @@ else:
     print(share)
     print(f"[url={share}]{no_ext(basename)}[/url]")
     print("**********************************************")
-    output = OutputShare(with_cover=False, name=basename, share=share)
+    # output = OutputShare(with_cover=False, name=basename, share=share)
+    output = OutputShare(name=basename, share=share)
     output.mainloop()
