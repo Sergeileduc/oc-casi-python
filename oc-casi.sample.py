@@ -5,6 +5,7 @@
 Return BBcode.
 """
 
+import json
 import math
 import os
 import sys
@@ -27,9 +28,15 @@ import requests.exceptions
 from bs4 import BeautifulSoup
 import owncloud  # pip install pyocclient
 
-user = "username"
-password = "password"
-server = "http://server"
+dir_path = os.path.dirname(os.path.realpath(__file__))
+config_file = os.path.join(dir_path, "config.json")
+
+with open(config_file) as json_data_file:
+    data = json.load(json_data_file)
+
+user = data["user"]
+password = data["passwd"]
+server = data["server"]
 
 API_PATH = "ocs/v1.php/apps/files_sharing/api/v1"
 

@@ -2,6 +2,7 @@ __pycache__/
 build/
 dist/
 .vscode/.ropeproject/
+config.json
 oc-casi.py
 oc-casi-125.py
 oc-casi-320.py
