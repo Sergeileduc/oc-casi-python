@@ -1,6 +1,6 @@
 # oc-casi-python
 
-Rename it (remove .sample).
+Rename config file (remove .sample).
 
 Add your credentials in the file.
 
