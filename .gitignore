@@ -12,3 +12,4 @@ credentials.txt
 *.jpg
 *.zip
 *.spec
+.venv/
