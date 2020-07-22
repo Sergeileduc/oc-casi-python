@@ -630,7 +630,7 @@ try:
     print("Logged in !")
 except requests.exceptions.MissingSchema:
     print("Erreur.")
-    print(f"Veuillez configurer avec une url correcte")
+    print("Veuillez configurer avec une url correcte")
     mb.askokcancel("Erreur", "URL incorrecte.")
     sys.exit(1)
 except owncloud.owncloud.HTTPResponseError:
