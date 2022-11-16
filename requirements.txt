@@ -1,3 +1,3 @@
-pyocclient
+pyocclient==0.6
 requests
-py-casim
+py-casim==2.0.2
