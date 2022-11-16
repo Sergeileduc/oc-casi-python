@@ -5,6 +5,7 @@
 Return BBcode.
 """
 
+# import logging
 import json
 import math
 import os
@@ -21,11 +22,13 @@ import tkinter.messagebox as mb
 from tkinter import END, SEL, INSERT
 
 import zipfile
-from pathlib import Path
+# from pathlib import Path
 import requests.exceptions
 
 import owncloud  # pip install pyocclient
-from py_casim import Casim
+
+from utils.tools import extract_cover, get_base_name, no_ext
+from py_casim import Casim, CasimLogged
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 config_file = os.path.join(dir_path, "config.json")
@@ -33,9 +36,10 @@ config_file = os.path.join(dir_path, "config.json")
 with open(config_file) as json_data_file:
     data = json.load(json_data_file)
 
-user = data["user"]
-password = data["passwd"]
-server = data["server"]
+user = data.get("user")
+password = data.get("passwd")
+server = data.get("server")
+casim_dict = data.get("Casimages")
 
 API_PATH = "ocs/v1.php/apps/files_sharing/api/v1"
 
@@ -44,60 +48,12 @@ redim_val = 640
 cloud_dir = ""
 cover_bool = False
 variant_bool = False
-paths = ".owncloud_paths.txt"
+# paths = ".owncloud_paths.txt"
 
 # Check command line arguments
 if len(sys.argv) < 2:
     print("Missing command line argument (cbz file)")
     sys.exit()
-
-
-def get_base_name(local_file):
-    """Get file basename."""
-    if os.path.isfile(local_file):
-        basename = os.path.basename(local_file)
-        print(f"Basename is : {basename}")
-        return basename
-
-
-# def setup_logging(
-#     default_path='logging_conf.json',
-#     default_level=logging.INFO,
-#     env_key='LOG_CFG'
-# ):
-#     """Setup logging configuration
-
-#     """
-#     path = default_path
-#     value = os.getenv(env_key, None)
-#     if value:
-#         path = value
-#     if os.path.exists(path):
-#         with open(path, 'rt') as f:
-#             config = json.load(f)
-#         logging.config.dictConfig(config)
-#     else:
-#         logging.basicConfig(level=default_level)
-
-
-def no_ext(basename):
-    return os.path.splitext(basename)[0]
-
-
-# EXTRACT COVER
-def extract_cover(arc_name, index=0):
-    """Extract 1st jpg found in archive (zip or cbz)."""
-    with zipfile.ZipFile(arc_name, 'r') as zf:
-        img_list = zf.namelist()
-        jpg_list = [i for i in img_list if (
-            i.endswith(".jpg") or i.endswith(".jpeg"))]
-        jpg_list.sort()
-        cover = jpg_list[index]  # extracts 1st jpeg for cover (1 for variant)
-        file_data = zf.read(cover)
-    with open(os.path.basename(cover), "wb") as fout:
-        fout.write(file_data)
-
-    return os.path.basename(cover)
 
 
 class OcExplorer(tk.Toplevel):
@@ -222,7 +178,7 @@ class PathChoice(tk.Tk):
 
         self.title("Choix du chemin Owncloud")
 
-        self.paths_file = os.path.join(Path.home(), file_)
+        self.conf_file = file_
         self.paths_list = []
 
         self.selected_cloud_dir = ""
@@ -231,8 +187,8 @@ class PathChoice(tk.Tk):
 
         self.redim.set(self.choices[0])
 
-        self._init_file()
         self._read_file()
+        self._read_fav()
         # self._print_list()
 
         # One frame for lisbox and scrollbar
@@ -315,13 +271,14 @@ class PathChoice(tk.Tk):
 
     def _init_file(self):
         # Create file if not exists
-        with open(self.paths_file, 'a'):
-            pass
+        pass
 
     def _read_file(self):
-        # Read file
-        with open(self.paths_file, 'r') as f:
-            self.paths_list = f.read().splitlines()
+        with open(self.conf_file, "r", encoding='utf-8') as json_file:
+            self.data = json.load(json_file)
+
+    def _read_fav(self):
+        self.paths_list = self.data["favs"]
 
     def _print_list(self):
         for p in self.paths_list:
@@ -333,6 +290,7 @@ class PathChoice(tk.Tk):
             index = self.paths_list.index(self.lb.get(sel[0]))
             self.lb.delete(sel)
             self.paths_list.pop(index)
+            self.data["favs"] = self.paths_list
 
     def _add(self):
         self.new_dir = ""
@@ -341,6 +299,7 @@ class PathChoice(tk.Tk):
             print(f"Adding : {self.new_dir}")
             self.paths_list.append(self.new_dir)
             self.lb.insert(END, self.new_dir)
+            self.data["favs"] = self.paths_list
         # self.lb.insert(END, self.paths_list[-1])
 
     def _select(self):
@@ -353,6 +312,7 @@ class PathChoice(tk.Tk):
             pass
 
     def _quit(self):
+        print("Quitting")
         self._save_file()
         self.destroy()
         sys.exit()
@@ -366,10 +326,10 @@ class PathChoice(tk.Tk):
     def _save_file(self):
         self.paths_list.sort()
 
-        if "Edit" in self.paths_list:
-            self.paths_list.insert(0, self.paths_list.pop(self.paths_list.index("Edit")))  # noqa:E501
-        with open(self.paths_file, 'w') as f:
-            f.writelines([(i + "\n") for i in self.paths_list if i])
+        if "Edits" in self.paths_list:
+            self.paths_list.insert(0, self.paths_list.pop(self.paths_list.index("Edits")))  # noqa:E501
+        with open(self.conf_file, 'w', encoding='utf-8') as outfile:
+            json.dump(self.data, outfile, ensure_ascii=False, indent=4)
 
     def _center(self):
         self.update_idletasks()
@@ -599,7 +559,9 @@ class OutputShare(tk.Tk):
 # logger.info('Startlogging:')
 
 # MAIN PROGRAM here :
-app = PathChoice(file_=paths)
+
+# Choose a path (or add one)
+app = PathChoice(file_=config_file)
 app.protocol("WM_DELETE_WINDOW", app._quit)
 app.mainloop()
 
@@ -682,22 +644,35 @@ share = oc.share_file_with_link(cloud_file).get_link()
 if zipfile.is_zipfile(local_file) and cover_bool:
     print("Is zip AND with cover upload")
     cover = extract_cover(local_file)
-    print(cover)
+    # print(cover)
 
-    casi = Casim(cover, resize=redim_val)
-    cover_url = casi.get_link()
-    # delete cover
+    if casim_dict:
+        if casim_dict.get("login") and casim_dict.get("passwd"):
+            casi_upload = CasimLogged(cover, resize=redim_val)
+            casi_upload.login(casim_dict.get("login"),
+                              casim_dict.get("passwd"))
+            casi_upload.change_folder(casim_dict.get("folder"))
+        else:
+            casi_upload = Casim(cover, resize=redim_val)
+    else:
+        casi_upload = Casim(cover, resize=redim_val)
+    cover_url = casi_upload.get_link()
     os.remove(cover)
-    print("**********************************************")
-    print(share)
-    print(cover_url)
 
     if variant_bool:
         variant = extract_cover(local_file, index=1)
         print(variant)
-        casi2 = Casim(variant, resize=redim_val)
-        variant_url = casi2.get_link()
-        # delete variant
+        if casim_dict:
+            if casim_dict.get("login") and casim_dict.get("passwd"):
+                casi_upload = CasimLogged(variant, resize=redim_val)
+                casi_upload.login(casim_dict.get("login"),
+                                  casim_dict.get("passwd"))
+                casi_upload.change_folder(casim_dict.get("folder"))
+            else:
+                casi_upload = Casim(variant, resize=redim_val)
+        else:
+            casi_upload = Casim(variant, resize=redim_val)
+        variant_url = casi_upload.get_link()
         os.remove(variant)
         print(variant_url)
         print(f"[url={share}][img]{cover_url}[/img] [img]{variant_url}[/img][/url]")  # noqa:E501

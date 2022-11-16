@@ -1,5 +1,11 @@
 {
     "server": "http://myserver.io",
     "user": "Username",
-    "passwd": "Password"
+    "passwd": "Password",
+    "favs": [],
+    "Casimages": {
+        "login": "casimages_login",
+        "passwd": "casimages_password",
+        "folder": ""
+    }
 }
